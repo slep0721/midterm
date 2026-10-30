@@ -1,10 +1,10 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>候位管理</title>
-<link rel="stylesheet" href="waitlist.css">
+<link rel="stylesheet" href="../waitlist.css">
 </head>
 <body>
 <div class="wrap wide">
@@ -19,7 +19,7 @@
   </form>
 
   <div id="panel" hidden>
-    <p class="sub">目前候位 <b id="count">…</b> 組　<a href="index.html" target="_blank">顧客端</a>　<a href="#" id="logout">登出</a>　<span class="muted">每 10 秒自動更新</span></p>
+    <p class="sub">目前候位 <b id="count">…</b> 組　<a href="./index.html" target="_blank">顧客端</a>　<a href="#" id="logout">登出</a>　<span class="muted">每 10 秒自動更新</span></p>
     <div id="flash" class="card flash" hidden></div>
     <div class="card table-wrap">
       <table>
@@ -31,7 +31,7 @@
   </div>
 </div>
 
-<script src="app.js"></script>
+<script src="../app.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id);
