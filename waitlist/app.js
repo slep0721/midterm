@@ -39,7 +39,9 @@ const Local = {
         total: oldRows.filter(r => String(r.created_at).startsWith(today)).length,
         seated: oldRows.filter(r => r.status === "seated" && String(r.closed_at).startsWith(today)).length,
         cancelled: oldRows.filter(r => r.status === "cancelled" && String(r.closed_at).startsWith(today)).length,
-        waitSeconds: 0
+        waitSeconds: oldRows.filter(r => r.status === "seated" && String(r.closed_at).startsWith(today))
+          .reduce((sum, r) => sum + this.waitSecondsBetween(r.created_at, r.closed_at), 0),
+        waitCount: oldRows.filter(r => r.status === "seated" && String(r.closed_at).startsWith(today)).length
       };
       localStorage.setItem(this.statsKey, JSON.stringify(stats));
       localStorage.removeItem("waitlist_demo");
@@ -55,21 +57,27 @@ const Local = {
     const today = this.now().slice(0, 10);
     try {
       const saved = JSON.parse(localStorage.getItem(this.statsKey) || "null");
-      if (saved && saved.date === today) return saved;
+      if (saved && saved.date === today) {
+        return Object.assign({ total: 0, seated: 0, cancelled: 0, waitSeconds: 0, waitCount: 0 }, saved);
+      }
     } catch (e) {}
-    const fresh = { date: today, total: 0, seated: 0, cancelled: 0, waitSeconds: 0 };
+    const fresh = { date: today, total: 0, seated: 0, cancelled: 0, waitSeconds: 0, waitCount: 0 };
     try { localStorage.setItem(this.statsKey, JSON.stringify(fresh)); } catch (e) {}
     return fresh;
   },
   addStat(reason, waitSeconds = 0) {
     const stats = this.stats();
     stats[reason]++;
-    if (reason === "seated") stats.waitSeconds += waitSeconds;
+    if (reason === "seated") { stats.waitSeconds += waitSeconds; stats.waitCount++; }
     try { localStorage.setItem(this.statsKey, JSON.stringify(stats)); } catch (e) {}
   },
   waitSeconds(createdAt) {
-    const started = new Date(String(createdAt).replace(" ", "T")).getTime();
-    return Number.isFinite(started) ? Math.max(0, Math.floor((Date.now() - started) / 1000)) : 0;
+    return this.waitSecondsBetween(createdAt, this.now());
+  },
+  waitSecondsBetween(startedAt, endedAt) {
+    const started = new Date(String(startedAt).replace(" ", "T")).getTime();
+    const ended = new Date(String(endedAt).replace(" ", "T")).getTime();
+    return Number.isFinite(started) && Number.isFinite(ended) ? Math.max(0, Math.floor((ended - started) / 1000)) : 0;
   },
   addLog(event, detail) {
     let entries = [];
@@ -114,7 +122,7 @@ const Local = {
         const stats = this.stats();
         const resolved = stats.seated + stats.cancelled;
         return { queue, total: stats.total, seated: stats.seated, cancelled: stats.cancelled,
-                 average_wait_minutes: stats.seated ? Math.round(stats.waitSeconds / stats.seated / 60 * 10) / 10 : 0,
+                 average_wait_minutes: stats.waitCount ? Math.round(stats.waitSeconds / stats.waitCount / 60 * 10) / 10 : null,
                  abandonment_rate: resolved ? Math.round(stats.cancelled / resolved * 1000) / 10 : 0 };
       }
       case "notify": {
