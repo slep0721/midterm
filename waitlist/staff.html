@@ -20,6 +20,11 @@
 
   <div id="panel" hidden>
     <p class="sub">目前候位 <b id="count">…</b> 組　<a href="./index.html" target="_blank">顧客端</a>　<a href="#" id="logout">登出</a>　<span class="muted">每 10 秒自動更新</span></p>
+    <p class="actions">
+      <button class="btn small" type="button" id="show-log">查看最近紀錄</button>
+      <button class="btn small grey" type="button" id="reset-data">清空測試資料</button>
+    </p>
+    <pre id="log-output" class="card" hidden style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
     <div id="flash" class="card flash" hidden></div>
     <div class="card table-wrap">
       <table>
@@ -66,6 +71,28 @@
 
   $("login").addEventListener("submit", ev => { ev.preventDefault(); setKey($("key").value); $("login-error").hidden = true; load(); });
   $("logout").addEventListener("click", ev => { ev.preventDefault(); setKey(null); load(); });
+
+  $("show-log").addEventListener("click", async () => {
+    try {
+      const d = await api("log", { key: getKey() });
+      if (d.error) throw new Error(d.error);
+      $("log-output").textContent = d.log.length ? d.log.join("\n") : "目前沒有事件紀錄";
+      $("log-output").hidden = false;
+    } catch (e) { flash("讀取紀錄失敗：" + e.message, true); }
+  });
+
+  $("reset-data").addEventListener("click", async () => {
+    if (!confirm("確定清除所有候位、號碼、統計與事件紀錄？此操作無法復原。")) return;
+    const b = $("reset-data"); b.disabled = true;
+    try {
+      const d = await api("reset", { key: getKey() });
+      if (d.error) throw new Error(d.error);
+      $("log-output").hidden = true;
+      flash("測試資料已清空");
+      await load();
+    } catch (e) { flash("清除失敗：" + e.message, true); }
+    b.disabled = false;
+  });
 
   $("rows").addEventListener("click", async ev => {
     const b = ev.target.closest("button[data-act]"); if (!b) return;
