@@ -9,7 +9,7 @@
  * API_URL 留空時為「示範模式」：資料只存在這台瀏覽器的 localStorage，
  * 可以先測試畫面與流程，但不會跨裝置、也不會真的寄信。
  * ===================================================================== */
-const API_URL = "";          // 例如 "https://script.google.com/macros/s/AKfycb.../exec"
+const API_URL = "https://script.google.com/macros/s/AKfycbwFe8BSzDTMEgMFDJ08u91bqFE6mDELOozvjZH-8V5YpCbZJ4P8HeTuWF9r80gp-PIF/exec";          // 例如 "https://script.google.com/macros/s/AKfycb.../exec"
 const RESTAURANT = "海大餐廳";
 const DEMO_STAFF_KEY = "staff";   // 示範模式的員工密碼（正式模式的密碼寫在 Code.gs 的 STAFF_KEY）
 
