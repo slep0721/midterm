@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 海大餐廳候位系統 後端（Google Apps Script）
  * ------------------------------------------------------------
  * Queue 自己寫：候位資料是一個 JSON 陣列，存在 Apps Script 內建的
@@ -8,7 +8,7 @@
  *   1. 到 https://script.google.com → 新專案，把這個檔案全部貼到 Code.gs，改掉 STAFF_KEY
  *   2. 部署 → 新增部署作業 → 類型「網頁應用程式」
  *      執行身分：我　／　誰可以存取：所有人
- *   3. 複製「網頁應用程式網址」，貼到前端 app.js 的 API_URL
+ *   3. 複製「網頁應用程式網址」，貼到前端 waitlist/app.js 的 API_URL
  */
 const STAFF_KEY  = "staff";        // 員工密碼，請改成自己的
 const RESTAURANT = "海大餐廳";
