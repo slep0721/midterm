@@ -19,7 +19,10 @@
     <label for="name">姓名</label>
     <input id="name" name="name" required maxlength="30" placeholder="王小明" autocomplete="name">
     <label for="gender">性別</label>
-    <select id="gender" name="gender"><option>男</option><option>女</option><option>其他</option></select>
+    <select id="gender" name="gender" required>
+      <option value="" selected disabled>請選擇</option>
+      <option value="男">男</option><option value="女">女</option><option value="其他">其他</option>
+    </select>
     <label for="email">E-mail（輪到時會寄通知）</label>
     <input id="email" name="email" type="email" required placeholder="you@example.com" autocomplete="email">
     <label for="party">人數</label>

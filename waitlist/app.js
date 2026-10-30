@@ -36,8 +36,10 @@ const Local = {
       const today = this.now().slice(0, 10);
       const stats = {
         date: today,
+        total: oldRows.filter(r => String(r.created_at).startsWith(today)).length,
         seated: oldRows.filter(r => r.status === "seated" && String(r.closed_at).startsWith(today)).length,
-        cancelled: oldRows.filter(r => r.status === "cancelled" && String(r.closed_at).startsWith(today)).length
+        cancelled: oldRows.filter(r => r.status === "cancelled" && String(r.closed_at).startsWith(today)).length,
+        waitSeconds: 0
       };
       localStorage.setItem(this.statsKey, JSON.stringify(stats));
       localStorage.removeItem("waitlist_demo");
@@ -55,14 +57,19 @@ const Local = {
       const saved = JSON.parse(localStorage.getItem(this.statsKey) || "null");
       if (saved && saved.date === today) return saved;
     } catch (e) {}
-    const fresh = { date: today, seated: 0, cancelled: 0 };
+    const fresh = { date: today, total: 0, seated: 0, cancelled: 0, waitSeconds: 0 };
     try { localStorage.setItem(this.statsKey, JSON.stringify(fresh)); } catch (e) {}
     return fresh;
   },
-  addStat(reason) {
+  addStat(reason, waitSeconds = 0) {
     const stats = this.stats();
     stats[reason]++;
+    if (reason === "seated") stats.waitSeconds += waitSeconds;
     try { localStorage.setItem(this.statsKey, JSON.stringify(stats)); } catch (e) {}
+  },
+  waitSeconds(createdAt) {
+    const started = new Date(String(createdAt).replace(" ", "T")).getTime();
+    return Number.isFinite(started) ? Math.max(0, Math.floor((Date.now() - started) / 1000)) : 0;
   },
   addLog(event, detail) {
     let entries = [];
@@ -82,7 +89,7 @@ const Local = {
         return { ...queue[i], ahead: i, waiting: queue.length };
       }
       case "join": {
-        if (!p.name || !p.email || String(p.email).indexOf("@") < 0) return { error: "請填寫姓名與正確的 E-mail" };
+        if (!p.name || !p.gender || !p.email || String(p.email).indexOf("@") < 0) return { error: "請填寫姓名、性別與正確的 E-mail" };
         if (queue.length >= 500) return { error: "候位已滿，請稍後再試" };
         const id = Number(localStorage.getItem(this.nextIdKey) || "1");
         const item = { id, name: String(p.name).trim(), gender: p.gender || "其他", email: String(p.email).trim(),
@@ -90,6 +97,7 @@ const Local = {
         queue.push(item);
         this.save(queue);
         try { localStorage.setItem(this.nextIdKey, String(id + 1)); } catch (e) {}
+        this.addStat("total");
         this.addLog("候位", id + " 號 " + item.name);
         return { id, ahead: queue.length - 1 };
       }
@@ -104,7 +112,10 @@ const Local = {
       case "queue": {
         if (!staff()) return { error: "unauthorized" };
         const stats = this.stats();
-        return { queue, seated: stats.seated, cancelled: stats.cancelled };
+        const resolved = stats.seated + stats.cancelled;
+        return { queue, total: stats.total, seated: stats.seated, cancelled: stats.cancelled,
+                 average_wait_minutes: stats.seated ? Math.round(stats.waitSeconds / stats.seated / 60 * 10) / 10 : 0,
+                 abandonment_rate: resolved ? Math.round(stats.cancelled / resolved * 1000) / 10 : 0 };
       }
       case "notify": {
         if (!staff()) return { error: "unauthorized" };
@@ -119,7 +130,7 @@ const Local = {
         const i = findIndex(); if (i < 0) return { error: "找不到這個候位號碼" };
         const [r] = queue.splice(i, 1);
         const reason = action === "seat" ? "seated" : "cancelled";
-        this.save(queue); this.addStat(reason);
+        this.save(queue); this.addStat(reason, reason === "seated" ? this.waitSeconds(r.created_at) : 0);
         this.addLog(action === "seat" ? "入座" : "員工取消", r.id + " 號");
         return { ok: true };
       }

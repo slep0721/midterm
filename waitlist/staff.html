@@ -32,7 +32,7 @@
         <tbody id="rows"></tbody>
       </table>
     </div>
-    <p class="muted">今日已入座 <span id="seated">0</span> 組、取消 <span id="cancelled">0</span> 組。按「通知」會寄 E-mail 給顧客並將狀態改為已通知；「入座」與「取消」會把該組移出 queue。</p>
+    <p class="muted">今日候位 <span id="total">0</span> 組、已入座 <span id="seated">0</span> 組、取消 <span id="cancelled">0</span> 組；平均等候 <span id="average-wait">0</span> 分鐘，放棄率 <span id="abandonment-rate">0</span>%（取消數 ÷ 今日已結案組數）。按「通知」會寄 E-mail 給顧客並將狀態改為已通知；「入座」與「取消」會把該組移出 queue。</p>
   </div>
 </div>
 
@@ -55,7 +55,12 @@
     if (d.error === "unauthorized") { setKey(null); $("login-error").textContent = "密碼錯誤"; $("login-error").hidden = false; return load(); }
     if (d.error) { flash("讀取失敗：" + d.error, true); return; }
     $("login").hidden = true; $("panel").hidden = false;
-    $("count").textContent = d.queue.length; $("seated").textContent = d.seated; $("cancelled").textContent = d.cancelled;
+    $("count").textContent = d.queue.length;
+    $("total").textContent = d.total == null ? "—" : d.total;
+    $("seated").textContent = d.seated || 0;
+    $("cancelled").textContent = d.cancelled || 0;
+    $("average-wait").textContent = d.average_wait_minutes == null ? "—" : d.average_wait_minutes;
+    $("abandonment-rate").textContent = d.abandonment_rate == null ? "—" : d.abandonment_rate;
     $("rows").innerHTML = d.queue.length ? d.queue.map(r => `
       <tr>
         <td><b>${esc(r.id)}</b></td><td>${esc(r.name)}</td><td>${esc(r.gender)}</td><td>${esc(r.party_size)}</td>
